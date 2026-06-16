@@ -69,12 +69,12 @@ const FloorGrid: React.FC<FloorGridProps> = ({ width, depth, gridSize }) => {
 export const Room: React.FC = () => {
   const room     = useLayoutStore((s) => s.room);
   const gridSize = useLayoutStore((s) => s.gridSize);
-  const { width, depth, height } = room;
+  const { width, depth, height, wallColor, floorColor, ceilingColor, wallOpacity } = room;
 
   const wallMat = {
-    color: '#5a6a8a',
+    color: wallColor,
     transparent: true,
-    opacity: 0.25,
+    opacity: wallOpacity,
     side: THREE.DoubleSide,
   };
 
@@ -83,7 +83,7 @@ export const Room: React.FC = () => {
       {/* 床 */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[width, depth]} />
-        <meshStandardMaterial color="#242430" />
+        <meshStandardMaterial color={floorColor} />
       </mesh>
 
       {/* グリッド（スナップ幅と連動） */}
@@ -116,7 +116,7 @@ export const Room: React.FC = () => {
       {/* 天井 */}
       <mesh position={[0, height, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <planeGeometry args={[width, depth]} />
-        <meshStandardMaterial {...wallMat} opacity={0.1} />
+        <meshStandardMaterial color={ceilingColor} transparent opacity={wallOpacity * 0.4} side={THREE.DoubleSide} />
       </mesh>
     </group>
   );

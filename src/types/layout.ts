@@ -1,4 +1,6 @@
-export type ObjectType = 'table' | 'shelf' | 'box' | 'partition' | 'chair';
+export type ObjectType =
+  | 'table' | 'shelf' | 'box' | 'partition' | 'chair'
+  | 'sofa' | 'desk' | 'bed' | 'cabinet' | 'plant';
 
 export interface Vec3 {
   x: number;
@@ -20,6 +22,10 @@ export interface RoomSettings {
   width: number;
   depth: number;
   height: number;
+  wallColor: string;
+  floorColor: string;
+  ceilingColor: string;
+  wallOpacity: number;
 }
 
 export interface LayoutData {

@@ -3,15 +3,18 @@ import { useLayoutStore, OBJECT_LABELS } from '../store/layoutStore';
 import { ObjectEditor } from './ObjectEditor';
 import { exportToJSON, importFromJSON } from '../utils/exportImport';
 import { hasSavedLayout } from '../utils/storage';
-import type { ObjectType, RoomSettings } from '../types/layout';
+import type { ObjectType, RoomSettings, LayoutObject } from '../types/layout';
 
-const OBJECT_TYPES: ObjectType[] = ['table', 'shelf', 'box', 'partition', 'chair'];
+const OBJECT_TYPES: ObjectType[] = [
+  'table', 'shelf', 'box', 'partition', 'chair',
+  'sofa', 'desk', 'bed', 'cabinet', 'plant',
+];
 
 // ── 間取りプリセット ──────────────────────────────────────────────
 interface FloorPreset {
   id:    string;
   label: string;
-  room:  RoomSettings;
+  room:  Pick<RoomSettings, 'width' | 'depth' | 'height'>;
 }
 
 const FLOOR_PRESETS: { group: string; presets: FloorPreset[] }[] = [
@@ -51,12 +54,89 @@ const FLOOR_PRESETS: { group: string; presets: FloorPreset[] }[] = [
   },
 ];
 
+// ── 複合間取りプリセット ─────────────────────────────────────────
+type PresetObj = Omit<LayoutObject, 'id'>;
+
+interface ComplexPreset {
+  id: string;
+  label: string;
+  room: RoomSettings;
+  objects: PresetObj[];
+}
+
+const STYLE_BRIGHT = { wallColor: '#e8eaf0', floorColor: '#c4a882', ceilingColor: '#f0f0f5', wallOpacity: 0.65 };
+const WALL_C = '#d4cfc4';
+
+const wall = (name: string, x: number, z: number, sw: number, sh: number, sd: number): PresetObj => ({
+  type: 'partition', name,
+  position: { x, y: sh / 2, z },
+  rotation: { x: 0, y: 0, z: 0 },
+  size: { x: sw, y: sh, z: sd },
+  color: WALL_C,
+});
+
+const COMPLEX_PRESETS: ComplexPreset[] = [
+  {
+    id: 'cp_1ldk',
+    label: '1LDK（LDK ＋ 寝室）',
+    room: { width: 10, depth: 8, height: 2.5, ...STYLE_BRIGHT },
+    objects: [wall('仕切り壁', 2, 0, 0.12, 2.5, 8.0)],
+  },
+  {
+    id: 'cp_2ldk',
+    label: '2LDK（LDK ＋ 洋室×2）',
+    room: { width: 14, depth: 8, height: 2.5, ...STYLE_BRIGHT },
+    objects: [
+      wall('仕切り壁1', 0, 0, 0.12, 2.5, 8.0),
+      wall('仕切り壁2', 3.5, 0, 0.12, 2.5, 8.0),
+    ],
+  },
+  {
+    id: 'cp_3ldk',
+    label: '3LDK（LDK ＋ 洋室×3）',
+    room: { width: 18, depth: 10, height: 2.7, ...STYLE_BRIGHT },
+    objects: [
+      wall('仕切り壁1', 0, 0, 0.12, 2.7, 10.0),
+      wall('仕切り壁2', 4, 0, 0.12, 2.7, 10.0),
+      wall('仕切り壁3（横）', 6.5, 0, 5.0, 2.7, 0.12),
+    ],
+  },
+  {
+    id: 'cp_wasyou',
+    label: '和室 ＋ 洋室（8×7m）',
+    room: { width: 8, depth: 7, height: 2.5, wallColor: '#f0e8d4', floorColor: '#8B7355', ceilingColor: '#f5f0e8', wallOpacity: 0.65 },
+    objects: [wall('間仕切り', 0, 0, 0.12, 2.5, 7.0)],
+  },
+  {
+    id: 'cp_studio_bg',
+    label: 'スタジオ 背景エリア付き（12×8m）',
+    room: { width: 12, depth: 8, height: 3.0, wallColor: '#f5f5f5', floorColor: '#3a3a3a', ceilingColor: '#ffffff', wallOpacity: 0.8 },
+    objects: [wall('背景壁', -1, 0, 0.15, 3.0, 8.0)],
+  },
+  {
+    id: 'cp_office_cubicle',
+    label: 'オフィス キュービクル（12×10m）',
+    room: { width: 12, depth: 10, height: 2.7, wallColor: '#e4e8ec', floorColor: '#6a6a6a', ceilingColor: '#f0f0f0', wallOpacity: 0.7 },
+    objects: [
+      wall('仕切り1（縦）', -2, 0, 0.1, 1.5, 10.0),
+      wall('仕切り2（縦）', 2, 0, 0.1, 1.5, 10.0),
+      wall('仕切りA（横）', -4.5, -2.5, 4.0, 1.5, 0.1),
+      wall('仕切りB（横）', -4.5, 2.5, 4.0, 1.5, 0.1),
+    ],
+  },
+];
+
 const OBJECT_EMOJIS: Record<ObjectType, string> = {
   table:     '▬',
   shelf:     '▮',
   box:       '■',
   partition: '|',
   chair:     '⊓',
+  sofa:      '⊏',
+  desk:      '▭',
+  bed:       '▰',
+  cabinet:   '▯',
+  plant:     '♣',
 };
 
 export const Sidebar: React.FC = () => {
@@ -98,7 +178,9 @@ export const Sidebar: React.FC = () => {
     if (!file) return;
     try {
       const data = await importFromJSON(file);
-      applyLayoutData(data.room, data.objects);
+      const roomDefaults = { wallColor: '#5a6a8a', floorColor: '#242430', ceilingColor: '#2a2a3e', wallOpacity: 0.25 };
+      const room: RoomSettings = { ...roomDefaults, ...data.room };
+      applyLayoutData(room, data.objects);
       alert('インポートしました');
     } catch (err) {
       alert(err instanceof Error ? err.message : 'インポートに失敗しました');
@@ -111,11 +193,25 @@ export const Sidebar: React.FC = () => {
     if (!isNaN(n) && n > 0) setRoom({ [field]: n });
   };
 
+  const handleRoomColor = (field: 'wallColor' | 'floorColor' | 'ceilingColor', value: string) => {
+    setRoom({ [field]: value });
+  };
+
+  const handleWallOpacity = (value: string) => {
+    const n = parseFloat(value);
+    if (!isNaN(n)) setRoom({ wallOpacity: Math.max(0, Math.min(1, n)) });
+  };
+
+  const applyComplexPreset = (preset: ComplexPreset) => {
+    const objects = preset.objects.map(o => ({ ...o, id: crypto.randomUUID() }));
+    applyLayoutData(preset.room, objects);
+  };
+
   return (
     <aside className="sidebar">
       {/* ロゴ */}
       <div className="sidebar-logo">
-        <span>3D Layout Planner</span>
+        <span>3Dレイアウトプランナー</span>
       </div>
 
       {/* 間取りプリセット */}
@@ -142,6 +238,22 @@ export const Sidebar: React.FC = () => {
             </optgroup>
           ))}
         </select>
+      </section>
+
+      {/* 複合間取りプリセット */}
+      <section className="sidebar-section">
+        <h3>複合間取り（仕切り壁付き）</h3>
+        <div className="complex-preset-list">
+          {COMPLEX_PRESETS.map((preset) => (
+            <button
+              key={preset.id}
+              className="btn-complex-preset"
+              onClick={() => applyComplexPreset(preset)}
+            >
+              {preset.label}
+            </button>
+          ))}
+        </div>
       </section>
 
       {/* 部屋設定 */}
@@ -178,6 +290,63 @@ export const Sidebar: React.FC = () => {
               onChange={(e) => handleRoomChange('height', e.target.value)}
             />
           </label>
+        </div>
+      </section>
+
+      {/* インテリア設定 */}
+      <section className="sidebar-section">
+        <h3>インテリア</h3>
+        <div className="room-color-settings">
+          <label className="color-setting-row">
+            <span>壁</span>
+            <input
+              type="color"
+              value={room.wallColor}
+              onChange={(e) => handleRoomColor('wallColor', e.target.value)}
+            />
+            <span className="color-hex-small">{room.wallColor}</span>
+          </label>
+          <label className="color-setting-row">
+            <span>床</span>
+            <input
+              type="color"
+              value={room.floorColor}
+              onChange={(e) => handleRoomColor('floorColor', e.target.value)}
+            />
+            <span className="color-hex-small">{room.floorColor}</span>
+          </label>
+          <label className="color-setting-row">
+            <span>天井</span>
+            <input
+              type="color"
+              value={room.ceilingColor}
+              onChange={(e) => handleRoomColor('ceilingColor', e.target.value)}
+            />
+            <span className="color-hex-small">{room.ceilingColor}</span>
+          </label>
+          <label className="color-setting-row">
+            <span>壁透明度</span>
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.05"
+              value={room.wallOpacity}
+              onChange={(e) => handleWallOpacity(e.target.value)}
+              className="opacity-slider"
+            />
+            <span className="color-hex-small">{Math.round(room.wallOpacity * 100)}%</span>
+          </label>
+        </div>
+        <div className="interior-presets">
+          <span className="preset-label">プリセット</span>
+          <div className="interior-preset-buttons">
+            <button className="btn-interior-preset" onClick={() => setRoom({ wallColor: '#f5f0e8', floorColor: '#c4a882', ceilingColor: '#fafaf5' })} title="ナチュラル">ナチュラル</button>
+            <button className="btn-interior-preset" onClick={() => setRoom({ wallColor: '#e8eaf0', floorColor: '#4a4a5a', ceilingColor: '#f0f0f5' })} title="モダン">モダン</button>
+            <button className="btn-interior-preset" onClick={() => setRoom({ wallColor: '#d4e8d4', floorColor: '#8B7355', ceilingColor: '#e8f0e8' })} title="北欧">北欧</button>
+            <button className="btn-interior-preset" onClick={() => setRoom({ wallColor: '#f0e8d4', floorColor: '#6b4a2a', ceilingColor: '#f5f0e8' })} title="和風">和風</button>
+            <button className="btn-interior-preset" onClick={() => setRoom({ wallColor: '#5a6a8a', floorColor: '#242430', ceilingColor: '#2a2a3e' })} title="暗室">暗室</button>
+          </div>
         </div>
       </section>
 

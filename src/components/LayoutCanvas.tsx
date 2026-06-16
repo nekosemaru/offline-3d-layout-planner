@@ -4,6 +4,7 @@ import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import * as THREE from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import type { ThreeEvent } from '@react-three/fiber';
+import type { LayoutObject as ILayoutObject } from '../types/layout';
 import { Room } from './Room';
 import { LayoutObject } from './LayoutObject';
 import { useLayoutStore } from '../store/layoutStore';
@@ -121,19 +122,93 @@ const Scene: React.FC<SceneProps> = ({ cameraPreset, onPresetApplied }) => {
     };
   }, [camera, gl]);
 
-  // Ctrl キー → ドラッグ中オブジェクトを時計回りに90°回転
+  // キーボード操作
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== 'Control') return;
+      // Del/Backspace → 選択中オブジェクトを削除（ドラッグ中は無効）
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        const { selectedId, removeObject } = useLayoutStore.getState();
+        if (selectedId && !draggingIdRef.current) {
+          e.preventDefault();
+          removeObject(selectedId);
+        }
+        return;
+      }
+
       const id = draggingIdRef.current;
       if (!id) return;
-      e.preventDefault();
       const state = useLayoutStore.getState();
       const obj = state.objects.find(o => o.id === id);
       if (!obj) return;
-      const newY = ((obj.rotation.y - 90) % 360);
-      state.updateObject(id, { rotation: { ...obj.rotation, y: newY } });
+
+      // Ctrl: 仕切り → 90°に折る / その他 → 90°回転
+      if (e.key === 'Control') {
+        e.preventDefault();
+        if (obj.type !== 'partition') {
+          state.updateObject(id, { rotation: { ...obj.rotation, y: ((obj.rotation.y - 90) % 360) } });
+          return;
+        }
+        spawnConnectedPartition(obj, state, 90);
+        return;
+      }
+
+      // Shift: 仕切り → 同方向に延長
+      if (e.key === 'Shift' && obj.type === 'partition') {
+        e.preventDefault();
+        spawnConnectedPartition(obj, state, 0);
+      }
     };
+
+    // 現在の仕切りを確定し、接続した新仕切りをドラッグ開始
+    const spawnConnectedPartition = (
+      obj: ILayoutObject,
+      state: ReturnType<typeof useLayoutStore.getState>,
+      turnDeg: number,
+    ) => {
+      const snapPos = lastSnapRef.current ?? { x: obj.position.x, z: obj.position.z };
+      const { gridSnap, gridSize } = state;
+      const snap = (v: number) => gridSnap ? Math.round(v / gridSize) * gridSize : v;
+      const sx = snap(snapPos.x);
+      const sz = snap(snapPos.z);
+
+      // 現在の仕切りを床に降ろして確定
+      state.updateObject(obj.id, { position: { x: sx, y: obj.size.y / 2, z: sz } });
+
+      // 仕切りの長手方向ベクトル（world空間）
+      const rad = obj.rotation.y * (Math.PI / 180);
+      const longX = Math.sin(rad);
+      const longZ = Math.cos(rad);
+      const halfLen = obj.size.z / 2;
+
+      // 現在の仕切りの "先端" 位置
+      const endX = sx + longX * halfLen;
+      const endZ = sz + longZ * halfLen;
+
+      // 新しい仕切りの方向・回転
+      const newRotY = (obj.rotation.y + turnDeg) % 360;
+      const newRad  = newRotY * (Math.PI / 180);
+      const nLongX  = Math.sin(newRad);
+      const nLongZ  = Math.cos(newRad);
+
+      // 新仕切りのセンター = 先端 + 新方向 * halfLen
+      const newX = endX + nLongX * halfLen;
+      const newZ = endZ + nLongZ * halfLen;
+
+      const newObj: ILayoutObject = {
+        id: crypto.randomUUID(),
+        type: 'partition',
+        name: obj.name,
+        position: { x: newX, y: obj.size.y / 2 + LIFT_HEIGHT, z: newZ },
+        rotation: { ...obj.rotation, y: newRotY },
+        size: { ...obj.size },
+        color: obj.color,
+      };
+
+      state.addObjectAt(newObj);
+      draggingIdRef.current = newObj.id;
+      lastSnapRef.current   = { x: newX, z: newZ };
+    };
+
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
@@ -191,7 +266,11 @@ const Scene: React.FC<SceneProps> = ({ cameraPreset, onPresetApplied }) => {
 // ── メインコンポーネント ─────────────────────────────────────────
 
 export const LayoutCanvas: React.FC = () => {
-  const selectObject = useLayoutStore((s) => s.selectObject);
+  const selectObject      = useLayoutStore((s) => s.selectObject);
+  const selectedObjType   = useLayoutStore((s) => {
+    const obj = s.objects.find(o => o.id === s.selectedId);
+    return obj?.type ?? null;
+  });
   const [preset, setPreset] = useState<CameraPreset | null>(null);
   const handlePresetApplied = useCallback(() => setPreset(null), []);
 
@@ -204,6 +283,14 @@ export const LayoutCanvas: React.FC = () => {
           </button>
         ))}
       </div>
+
+      {selectedObjType === 'partition' && (
+        <div className="partition-hint">
+          ドラッグ中&nbsp;
+          <kbd>Ctrl</kbd> 90°に折る&nbsp;&nbsp;
+          <kbd>Shift</kbd> 同方向に延長
+        </div>
+      )}
 
       <Canvas
         shadows

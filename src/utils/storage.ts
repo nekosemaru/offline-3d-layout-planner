@@ -1,6 +1,6 @@
 import type { LayoutData } from '../types/layout';
 
-const STORAGE_KEY = 'offline-3d-layout-planner';
+const STORAGE_KEY = '3d-layout-planner';
 
 export const saveToLocalStorage = (data: LayoutData): void => {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));

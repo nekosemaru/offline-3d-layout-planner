@@ -8,6 +8,11 @@ const DEFAULT_SIZES: Record<ObjectType, Vec3> = {
   box:       { x: 0.5, y: 0.5,  z: 0.5 },
   partition: { x: 1.5, y: 1.8,  z: 0.05 },
   chair:     { x: 0.5, y: 0.85, z: 0.5 },
+  sofa:      { x: 2.0, y: 0.85, z: 0.9 },
+  desk:      { x: 1.2, y: 0.72, z: 0.6 },
+  bed:       { x: 1.6, y: 0.45, z: 2.0 },
+  cabinet:   { x: 0.8, y: 1.2,  z: 0.4 },
+  plant:     { x: 0.4, y: 1.2,  z: 0.4 },
 };
 
 const DEFAULT_COLORS: Record<ObjectType, string> = {
@@ -16,6 +21,11 @@ const DEFAULT_COLORS: Record<ObjectType, string> = {
   box:       '#D2691E',
   partition: '#B0C4DE',
   chair:     '#556B2F',
+  sofa:      '#7B6B8D',
+  desk:      '#7A6A5A',
+  bed:       '#8B7B6B',
+  cabinet:   '#6B5A4A',
+  plant:     '#3A7A3A',
 };
 
 const OBJECT_LABELS: Record<ObjectType, string> = {
@@ -24,6 +34,11 @@ const OBJECT_LABELS: Record<ObjectType, string> = {
   box:       'ボックス',
   partition: 'パーティション',
   chair:     'チェア',
+  sofa:      'ソファ',
+  desk:      'デスク',
+  bed:       'ベッド',
+  cabinet:   'キャビネット',
+  plant:     '観葉植物',
 };
 
 interface LayoutState {
@@ -37,6 +52,7 @@ interface LayoutState {
   setIsDragging: (v: boolean) => void;
   setRoom: (updates: Partial<RoomSettings>) => void;
   addObject: (type: ObjectType) => void;
+  addObjectAt: (obj: LayoutObject) => void;
   updateObject: (id: string, updates: Partial<LayoutObject>) => void;
   removeObject: (id: string) => void;
   selectObject: (id: string | null) => void;
@@ -49,7 +65,11 @@ interface LayoutState {
 }
 
 export const useLayoutStore = create<LayoutState>((set, get) => ({
-  room: { width: 10, depth: 8, height: 3 },
+  room: {
+    width: 10, depth: 8, height: 3,
+    wallColor: '#5a6a8a', floorColor: '#242430',
+    ceilingColor: '#2a2a3e', wallOpacity: 0.25,
+  },
   objects: [],
   selectedId: null,
   isDragging: false,
@@ -73,6 +93,9 @@ export const useLayoutStore = create<LayoutState>((set, get) => ({
     };
     set((s) => ({ objects: [...s.objects, newObj], selectedId: newObj.id }));
   },
+
+  addObjectAt: (obj) =>
+    set((s) => ({ objects: [...s.objects, obj], selectedId: obj.id })),
 
   updateObject: (id, updates) =>
     set((s) => ({
@@ -98,7 +121,9 @@ export const useLayoutStore = create<LayoutState>((set, get) => ({
   loadLayout: () => {
     const data = loadFromLocalStorage();
     if (!data) return false;
-    set({ room: data.room, objects: data.objects, selectedId: null });
+    const roomDefaults = { wallColor: '#5a6a8a', floorColor: '#242430', ceilingColor: '#2a2a3e', wallOpacity: 0.25 };
+    const room: RoomSettings = { ...roomDefaults, ...data.room };
+    set({ room, objects: data.objects, selectedId: null });
     return true;
   },
 
