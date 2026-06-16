@@ -1,0 +1,500 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg-base:      #0f0f1a;
+  --bg-panel:     #1a1a2e;
+  --bg-section:   #1f1f32;
+  --bg-input:     #12121e;
+  --bg-hover:     #252540;
+  --bg-selected:  #1e2d4a;
+
+  --text-primary:   #e0e0f0;
+  --text-secondary: #8888aa;
+  --text-label:     #6666aa;
+
+  --accent:       #4488ff;
+  --accent-hover: #5599ff;
+  --danger:       #ff4455;
+  --danger-hover: #ff5566;
+  --success:      #44dd88;
+
+  --border:       #2a2a44;
+  --border-focus: #4488ff;
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-size: 13px;
+  color: var(--text-primary);
+  background: var(--bg-base);
+}
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* ─── アプリレイアウト ─── */
+.app-layout {
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
+
+.canvas-area {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ─── サイドバー ─── */
+.sidebar {
+  width: 260px;
+  min-width: 260px;
+  height: 100%;
+  background: var(--bg-panel);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.sidebar-logo {
+  padding: 14px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent);
+  border-bottom: 1px solid var(--border);
+  letter-spacing: 0.5px;
+}
+
+.sidebar-section {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sidebar-section h3 {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-label);
+  margin-bottom: 8px;
+}
+
+/* ─── 間取りプリセット ─── */
+.preset-select {
+  width: 100%;
+  padding: 6px 8px;
+  font-size: 12px;
+}
+
+/* ─── 部屋設定 ─── */
+.room-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.room-settings label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.room-settings label span {
+  min-width: 44px;
+}
+
+/* ─── グリッドスナップ ─── */
+.snap-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.toggle-label input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.snap-size-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+/* ─── オブジェクト追加ボタン ─── */
+.object-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.btn-add-object {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  background: var(--bg-section);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.btn-add-object:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.btn-icon {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+/* ─── オブジェクトリスト ─── */
+.object-list-section {
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.object-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.object-list-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.1s;
+  border: 1px solid transparent;
+}
+
+.object-list-item:hover {
+  background: var(--bg-hover);
+}
+
+.object-list-item.selected {
+  background: var(--bg-selected);
+  border-color: var(--accent);
+}
+
+.object-color-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.object-list-name {
+  flex: 1;
+  font-size: 12px;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.object-list-item.selected .object-list-name {
+  color: var(--text-primary);
+}
+
+.btn-remove-small {
+  background: none;
+  border: none;
+  color: var(--text-label);
+  cursor: pointer;
+  font-size: 10px;
+  padding: 2px 4px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.btn-remove-small:hover {
+  background: var(--danger);
+  color: #fff;
+}
+
+/* ─── プロパティエディタ ─── */
+.editor-empty {
+  padding: 12px 0;
+  text-align: center;
+  color: var(--text-label);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.object-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.editor-type-badge {
+  font-size: 11px;
+  background: var(--bg-section);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 2px 6px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-delete {
+  padding: 4px 10px;
+  background: transparent;
+  border: 1px solid var(--danger);
+  border-radius: var(--radius-sm);
+  color: var(--danger);
+  font-size: 11px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-delete:hover {
+  background: var(--danger);
+  color: #fff;
+}
+
+.editor-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.editor-field label {
+  font-size: 10px;
+  color: var(--text-label);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.editor-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.section-title {
+  font-size: 10px;
+  color: var(--text-label);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.num-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.axis-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  min-width: 16px;
+  text-align: center;
+}
+
+.color-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.color-row input[type="color"] {
+  width: 36px;
+  height: 28px;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-input);
+  cursor: pointer;
+}
+
+.color-hex {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-family: monospace;
+}
+
+/* ─── ストレージボタン ─── */
+.storage-section {
+  margin-top: auto;
+}
+
+.storage-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.btn-storage {
+  padding: 7px 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-section);
+  color: var(--text-secondary);
+  font-size: 11px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.btn-storage:hover:not(:disabled) {
+  background: var(--bg-hover);
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+
+.btn-storage:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-save {
+  border-color: var(--success);
+  color: var(--success);
+}
+
+.btn-save:hover {
+  background: rgba(68, 221, 136, 0.1) !important;
+}
+
+/* ─── 共通インプット ─── */
+input[type="text"],
+input[type="number"],
+select {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 12px;
+  padding: 4px 6px;
+  width: 100%;
+  transition: border-color 0.15s;
+  outline: none;
+  font-family: inherit;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+select:focus {
+  border-color: var(--border-focus);
+}
+
+input[type="number"] {
+  text-align: right;
+  -moz-appearance: textfield;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  opacity: 0.5;
+}
+
+select {
+  cursor: pointer;
+}
+
+/* ─── Canvasラッパー ─── */
+.canvas-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/* ─── 視点切り替えボタン ─── */
+.view-buttons {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 10;
+  display: flex;
+  gap: 6px;
+}
+
+.btn-view {
+  padding: 6px 14px;
+  background: rgba(26, 26, 46, 0.85);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.btn-view:hover {
+  background: rgba(68, 136, 255, 0.2);
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+
+/* ─── スクロールバー ─── */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-label);
+}
