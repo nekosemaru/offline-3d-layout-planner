@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# 社内管理ファイル
+.company/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
