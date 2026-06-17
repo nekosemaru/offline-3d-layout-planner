@@ -114,11 +114,38 @@ const Scene: React.FC<SceneProps> = ({ cameraPreset, onPresetApplied }) => {
       canvas.style.cursor = 'default';
     };
 
+    // ドラッグ中のホイール → グリッド幅単位でオブジェクトを拡縮
+    const onWheel = (e: WheelEvent) => {
+      const id = draggingIdRef.current;
+      if (!id) return;
+      e.preventDefault();
+
+      const { gridSize, objects: objs, updateObject } = useLayoutStore.getState();
+      const obj = objs.find(o => o.id === id);
+      if (!obj) return;
+
+      const delta = e.deltaY < 0 ? gridSize : -gridSize;
+      const minSize = gridSize;
+      const clamp = (v: number) => Math.max(minSize, Math.round((v + delta) * 1000) / 1000);
+
+      // 仕切り（壁）は長さ(size.x)のみ拡縮、それ以外は3辺すべて拡縮
+      const newSize = obj.type === 'partition'
+        ? { ...obj.size, x: clamp(obj.size.x) }
+        : { x: clamp(obj.size.x), y: clamp(obj.size.y), z: clamp(obj.size.z) };
+
+      updateObject(id, {
+        size: newSize,
+        position: { ...obj.position, y: newSize.y / 2 + LIFT_HEIGHT },
+      });
+    };
+
     canvas.addEventListener('pointermove', onPointerMove);
     canvas.addEventListener('pointerup',   onPointerUp);
+    canvas.addEventListener('wheel',       onWheel, { passive: false });
     return () => {
       canvas.removeEventListener('pointermove', onPointerMove);
       canvas.removeEventListener('pointerup',   onPointerUp);
+      canvas.removeEventListener('wheel',       onWheel);
     };
   }, [camera, gl]);
 
