@@ -72,8 +72,8 @@ drawBox(870, 350, 60, 40, 140, 'rgb(180, 68, 200)');
 // タイトル
 ctx.fillStyle = '#e0e0f0';
 ctx.font = 'bold 64px sans-serif';
-ctx.fillText('Offline 3D', 80, 220);
-ctx.fillText('Layout Planner', 80, 300);
+ctx.fillText('3Dレイアウト', 80, 220);
+ctx.fillText('プランナー', 80, 300);
 
 // サブタイトル
 ctx.fillStyle = '#8888aa';
@@ -81,7 +81,7 @@ ctx.font = '28px sans-serif';
 ctx.fillText('ブラウザだけで動く無料の3Dレイアウトエディタ', 80, 370);
 
 // バッジ
-const badges = ['インストール不要', '完全オフライン', '無料'];
+const badges = ['インストール不要', '無料'];
 let bx = 80;
 badges.forEach(text => {
   ctx.fillStyle = 'rgba(68, 136, 255, 0.2)';
@@ -101,7 +101,7 @@ badges.forEach(text => {
 // URL
 ctx.fillStyle = '#4a4a6a';
 ctx.font = '20px monospace';
-ctx.fillText('nekosemaru.github.io/offline-3d-layout-planner/', 80, 560);
+ctx.fillText('nekosemaru.github.io/3d-layout-planner/', 80, 560);
 
 const out = resolve(__dirname, '../public/ogp.png');
 writeFileSync(out, canvas.toBuffer('image/png'));
