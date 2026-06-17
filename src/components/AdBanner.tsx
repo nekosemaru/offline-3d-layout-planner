@@ -6,9 +6,8 @@ declare global {
   }
 }
 
-// TODO: AdSenseで広告ユニットを作成後、AD_SLOT を実際の広告ユニットIDに置き換える
 const AD_CLIENT = 'ca-pub-2907570786908057';
-const AD_SLOT = 'XXXXXXXXXX';
+const AD_SLOT = '2897201623';
 
 export const AdBanner: React.FC = () => {
   const pushedRef = useRef(false);
