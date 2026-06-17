@@ -6,8 +6,8 @@ declare global {
   }
 }
 
-// TODO: AdSense審査通過後、実際の発行者IDと広告ユニットIDに置き換える
-const AD_CLIENT = 'ca-pub-XXXXXXXXXXXXXXXX';
+// TODO: AdSenseで広告ユニットを作成後、AD_SLOT を実際の広告ユニットIDに置き換える
+const AD_CLIENT = 'ca-pub-2907570786908057';
 const AD_SLOT = 'XXXXXXXXXX';
 
 export const AdBanner: React.FC = () => {
