@@ -7,7 +7,6 @@ import type { ThreeEvent } from '@react-three/fiber';
 import type { LayoutObject as ILayoutObject } from '../types/layout';
 import { Room } from './Room';
 import { LayoutObject } from './LayoutObject';
-import { AdBanner } from './AdBanner';
 import { useLayoutStore } from '../store/layoutStore';
 
 // ── カメラプリセット ──────────────────────────────────────────────
@@ -328,8 +327,6 @@ export const LayoutCanvas: React.FC = () => {
         <color attach="background" args={['#1a1a2e']} />
         <Scene cameraPreset={preset} onPresetApplied={handlePresetApplied} />
       </Canvas>
-
-      <AdBanner />
     </div>
   );
 };
